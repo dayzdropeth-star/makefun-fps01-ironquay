@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>IRONQUAY — Tactical FPS di Pelabuhan Malam</title>
+<style>
+  :root {
+    --canvas: #0d1420; --surface: #161e2a; --hairline: #2c3a4a;
+    --ink: #e9e6df; --muted: #98a0a8; --accent: #f0a830; --danger: #e05252;
+    --font-ui: system-ui, -apple-system, 'Segoe UI', sans-serif;
+    --font-readout: ui-monospace, 'SF Mono', Menlo, monospace;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; overflow: hidden; background: var(--canvas); color: var(--ink); font-family: var(--font-ui); }
+  #game, #game canvas { position: fixed; inset: 0; display: block; }
+  #hud { position: fixed; inset: 0; pointer-events: none; }
+  #flash { position: fixed; inset: 0; background: #fff; opacity: 0; pointer-events: none; }
+
+  #crosshair { position: fixed; left: 50%; top: 50%; width: 22px; height: 22px; transform: translate(-50%, -50%); --gap: 5px; }
+  #crosshair i { position: absolute; background: var(--ink); opacity: .9; }
+  #crosshair i:nth-child(1) { left: 10px; top: calc(10px - var(--gap) - 6px); width: 2px; height: 6px; }
+  #crosshair i:nth-child(2) { left: 10px; bottom: calc(10px - var(--gap) - 6px); width: 2px; height: 6px; }
+  #crosshair i:nth-child(3) { top: 10px; left: calc(10px - var(--gap) - 6px); height: 2px; width: 6px; }
+  #crosshair i:nth-child(4) { top: 10px; right: calc(10px - var(--gap) - 6px); height: 2px; width: 6px; }
+  #crosshair::after { content: ''; position: absolute; left: 10px; top: 10px; width: 2px; height: 2px; background: var(--ink); }
+  #crosshair.ads i { opacity: .35; }
+
+  #hitmarker { position: fixed; left: 50%; top: 50%; width: 26px; height: 26px; transform: translate(-50%, -50%) rotate(45deg); opacity: 0; transition: opacity 90ms linear; }
+  #hitmarker.on { opacity: 1; }
+  #hitmarker.kill i { background: var(--danger); }
+  #hitmarker i { position: absolute; background: var(--accent); }
+  #hitmarker i:nth-child(1) { left: 12px; top: 0; width: 2px; height: 8px; }
+  #hitmarker i:nth-child(2) { left: 12px; bottom: 0; width: 2px; height: 8px; }
+  #hitmarker i:nth-child(3) { top: 12px; left: 0; height: 2px; width: 8px; }
+  #hitmarker i:nth-child(4) { top: 12px; right: 0; height: 2px; width: 8px; }
+
+  #bottom-left { position: fixed; left: 28px; bottom: 22px; font-family: var(--font-readout); }
+  #hp-row { display: flex; align-items: baseline; gap: 8px; font-size: 34px; }
+  #hp-bar-wrap { width: 170px; height: 6px; background: var(--hairline); margin-top: 6px; }
+  #hp-bar { height: 100%; width: 100%; background: #7fd4a0; }
+  #score-line { margin-top: 8px; font-size: 13px; color: var(--muted); }
+  #score-line b { color: var(--ink); }
+
+  #bottom-right { position: fixed; right: 28px; bottom: 22px; text-align: right; font-family: var(--font-readout); }
+  #weapon-name { font-size: 13px; color: var(--muted); letter-spacing: .08em; text-transform: uppercase; }
+  #ammo { font-size: 52px; line-height: 1; }
+  #ammo.empty #ammo-mag { color: var(--accent); }
+  #ammo-reserve { font-size: 15px; color: var(--muted); }
+
+  #top-center { position: fixed; top: 18px; left: 50%; transform: translateX(-50%); text-align: center; font-family: var(--font-readout); }
+  #timer { font-size: 30px; }
+  #score-top { font-size: 14px; color: var(--muted); margin-top: 2px; }
+  #score-top b { color: var(--ink); font-size: 18px; }
+  #money-line { font-size: 14px; color: var(--accent); margin-top: 2px; }
+  #prompt { position: fixed; top: 96px; left: 50%; transform: translateX(-50%); font-size: 14px; color: var(--muted); text-align: center; max-width: 80vw; }
+
+  #killfeed { position: fixed; top: 18px; right: 24px; text-align: right; font-size: 13px; color: var(--muted); display: grid; gap: 4px; }
+  #killfeed div { background: rgba(13,20,32,.7); padding: 3px 8px; border-right: 2px solid var(--accent); }
+
+  #plant-bar { position: fixed; left: 50%; top: 58%; transform: translateX(-50%); width: 260px; display: none; text-align: center; }
+  #plant-label { font-size: 13px; letter-spacing: .1em; margin-bottom: 6px; }
+  #plant-fill-wrap { height: 8px; background: var(--hairline); }
+  #plant-fill { height: 100%; width: 0; background: var(--accent); }
+
+  #banner { position: fixed; left: 50%; top: 34%; transform: translate(-50%, -50%); text-align: center; display: none; width: 90vw; }
+  #banner.show { display: block; }
+  #banner-text { font-size: 30px; font-weight: 600; text-shadow: 0 2px 12px #000; }
+  #banner-sub { font-size: 15px; color: var(--muted); margin-top: 8px; }
+
+  #buy-menu { position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%); width: min(520px, 92vw); background: rgba(22,30,42,.96); border: 1px solid var(--hairline); padding: 20px 22px; display: none; pointer-events: auto; }
+  #buy-menu.open { display: block; }
+  #buy-menu h2 { margin: 0 0 4px; font-size: 20px; }
+  #buy-menu h2 span { float: right; color: var(--accent); font-family: var(--font-readout); font-size: 16px; }
+  #buy-menu p { margin: 0 0 14px; color: var(--muted); font-size: 13px; }
+  .buy-row { display: flex; gap: 10px; align-items: baseline; width: 100%; text-align: left; background: none; border: 1px solid var(--hairline); color: var(--ink); font: inherit; padding: 9px 12px; margin-bottom: 6px; cursor: pointer; }
+  .buy-row:hover { border-color: var(--accent); }
+  .buy-name { font-weight: 600; }
+  .buy-meta { color: var(--muted); font-size: 12px; flex: 1; }
+  .buy-price { color: var(--accent); font-family: var(--font-readout); }
+
+  .overlay { position: fixed; inset: 0; display: grid; place-items: center; padding: 24px; background: rgba(13,20,32,.82); z-index: 10; }
+  .overlay.hidden { display: none; }
+  .panel { width: min(480px, 100%); padding: 32px; background: var(--surface); border: 1px solid var(--hairline); }
+  .panel h1 { margin: 0 0 4px; font-size: 40px; letter-spacing: .06em; }
+  .panel h1 span { color: var(--accent); }
+  .panel p { margin: 0 0 22px; color: var(--muted); line-height: 1.55; font-size: 15px; }
+  .panel button { font: inherit; font-weight: 600; padding: 12px 18px; border: 1px solid var(--accent); background: var(--accent); color: var(--canvas); cursor: pointer; }
+  .panel button:hover { background: var(--ink); border-color: var(--ink); }
+  .keys { margin: 22px 0 0; padding: 0; list-style: none; display: grid; gap: 7px; font-size: 13px; color: var(--muted); }
+  .keys kbd { padding: 2px 6px; border: 1px solid var(--hairline); font-family: var(--font-readout); font-size: 11px; color: var(--ink); }
+  #end-overlay { display: none; }
+  #end-overlay.show { display: grid; }
+</style>
+</head>
+<body>
+<div id="game"></div>
+<div id="flash"></div>
+
+<div id="hud" aria-hidden="true">
+  <div id="crosshair"><i></i><i></i><i></i><i></i></div>
+  <div id="hitmarker"><i></i><i></i><i></i><i></i></div>
+  <div id="top-center">
+    <div id="timer">1:40</div>
+    <div id="score-top">TIDEBREAKERS <b id="score">0 — 0</b> HARBOUR WARD</div>
+    <div id="money-line"><span id="money">$800</span> · <span id="kills">Kill 0 · Ronde 1</span></div>
+  </div>
+  <div id="prompt"></div>
+  <div id="killfeed"></div>
+  <div id="bottom-left">
+    <div id="hp-row"><span id="hp">100</span><span style="font-size:14px;color:var(--muted)">HP</span></div>
+    <div id="hp-bar-wrap"><div id="hp-bar"></div></div>
+    <div id="score-line">Tidebreakers vs Harbour Ward · Iron Quay</div>
+  </div>
+  <div id="bottom-right">
+    <div id="weapon-name">P9 "Gull"</div>
+    <div id="ammo"><span id="ammo-mag">12</span><span id="ammo-reserve">/ 48</span></div>
+  </div>
+  <div id="plant-bar"><div id="plant-label">MENANAM BOM…</div><div id="plant-fill-wrap"><div id="plant-fill"></div></div></div>
+  <div id="banner"><div id="banner-text"></div><div id="banner-sub"></div></div>
+  <div id="buy-menu">
+    <h2>BELI SENJATA <span id="buy-money">$800</span></h2>
+    <p>Fase beli 15 detik. Klik untuk membeli — senjata langsung dipakai. Granat: tekan 3 (Squall Frag) / 4 (Fog Flash) saat ronde berjalan.</p>
+    <div id="buy-list"></div>
+  </div>
+</div>
+
+<div id="start-overlay" class="overlay">
+  <section class="panel" role="dialog" aria-modal="true" aria-labelledby="title">
+    <h1>IRON<span>QUAY</span></h1>
+    <p>Tactical FPS 5v5 di pelabuhan kontainer malam hari. Kamu Tidebreakers: eliminasi Harbour Ward, atau tanam bom di Site A (Drydock) / Site B (Warehouse). Pertama sampai 5 ronde menang match.</p>
+    <button id="play" type="button">Klik untuk main</button>
+    <ul class="keys">
+      <li><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> gerak · <kbd>Mouse</kbd> bidik · <kbd>Klik kiri</kbd> tembak · <kbd>Klik kanan</kbd> ADS</li>
+      <li><kbd>R</kbd> reload · <kbd>Shift</kbd> sprint · <kbd>Ctrl</kbd>/<kbd>C</kbd> jongkok · <kbd>Spasi</kbd> lompat</li>
+      <li><kbd>E</kbd> (tahan) tanam bom · <kbd>3</kbd>/<kbd>4</kbd> granat · <kbd>1</kbd>/<kbd>2</kbd> ganti senjata · <kbd>M</kbd> mute</li>
+    </ul>
+  </section>
+</div>
+
+<div id="end-overlay" class="overlay">
+  <section class="panel" role="dialog" aria-modal="true">
+    <h1 id="end-title">TIDEBREAKERS MENANG</h1>
+    <p id="end-sub"></p>
+    <button id="restart" type="button">Main lagi</button>
+  </section>
+</div>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "./vendor/three/three.module.min.js"
+  }
+}
+</script>
+<script type="module" src="./src/main.js"></script>
+</body>
+</html>
