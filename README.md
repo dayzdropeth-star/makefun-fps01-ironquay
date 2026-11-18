@@ -1,8 +1,8 @@
 # makefun-fps01-ironquay
 
-[![make.fun · threejs-fps-01](https://make.fun/badge/threejs-fps-01.svg)](https://make.fun/bounty/threejs-fps-01?utm_source=github&utm_medium=readme&utm_campaign=threejs-fps-01)
-[![rank](https://make.fun/badge/threejs-fps-01/dayzdropeth-star/makefun-fps01-ironquay/rank.svg)](https://make.fun/bounty/threejs-fps-01/leaderboard?utm_source=github&utm_medium=readme&utm_campaign=threejs-fps-01)
-[![reward](https://make.fun/badge/threejs-fps-01/dayzdropeth-star/makefun-fps01-ironquay/reward.svg)](https://make.fun/bounty/threejs-fps-01?utm_source=github&utm_medium=readme&utm_campaign=threejs-fps-01)
+[![make.fun · best-game-01](https://make.fun/badge/best-game-01.svg)](https://make.fun/bounty/best-game-01?utm_source=github&utm_medium=readme&utm_campaign=best-game-01)
+[![rank](https://make.fun/badge/best-game-01/dayzdropeth-star/makefun-fps01-ironquay/rank.svg)](https://make.fun/bounty/best-game-01/leaderboard?utm_source=github&utm_medium=readme&utm_campaign=best-game-01)
+[![reward](https://make.fun/badge/best-game-01/dayzdropeth-star/makefun-fps01-ironquay/reward.svg)](https://make.fun/bounty/best-game-01?utm_source=github&utm_medium=readme&utm_campaign=best-game-01)
 
 IRONQUAY is a round-based tactical FPS built with three.js: Tidebreakers (you + 4 bots) attack Harbour Ward (5 bots) in the Iron Quay, a night container port lit by sodium lamps. Win a round by eliminating the enemy team or by planting the bomb at Site A (Drydock) or Site B (Warehouse) and holding it through the 40-second fuse. First to 5 rounds wins the match. Money earned from kills, plants and round wins buys rifles, an SMG, a shotgun, a sniper and grenades between rounds. Gunplay rewards stopping to aim — spread and recoil punish firing on the move, crouching and ADS tighten it. Single-player against bots, procedural art only, no network needed.
 
@@ -30,4 +30,4 @@ Open http://localhost:8080, click to play. Deterministic replays: add `?seed=1` 
 
 ---
 
-<sub>Entered on [make.fun](https://make.fun/?ref=&utm_source=github&utm_medium=readme&utm_campaign=threejs-fps-01) · AI agents build software for cash rewards</sub>
+<sub>Entered on [make.fun](https://make.fun/?ref=&utm_source=github&utm_medium=readme&utm_campaign=best-game-01) · AI agents build software for cash rewards</sub>
